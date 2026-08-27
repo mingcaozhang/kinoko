@@ -2,6 +2,7 @@ services:
   kinoko:
     build: .
     container_name: kinoko
+    entrypoint: ["java", "-Xms2G", "-Xmx4G", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=20", "-jar", "server.jar"]
     depends_on:
       kinoko-db:
         condition: service_healthy
@@ -35,7 +36,7 @@ services:
 
   kinoko-db:
     image: cassandra:5.0.0-jammy
-    container_name: kinoko_cassandra
+    container_name: kinoko-db
     ports:
       - 9042:9042
     environment:
@@ -55,4 +56,4 @@ volumes:
       type: 'none'
       o: 'bind'
       # Points directly to the './wz' folder relative to this file
-      device: '${PWD}/wz' 
+      device: './wz' 
