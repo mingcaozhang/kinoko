@@ -8,7 +8,7 @@ public final class ServerConfig {
     public static final String WORLD_NAME = Util.getEnv("WORLD_NAME", "Kinoko");
     public static final int CHANNELS_PER_WORLD = Util.getEnv("CHANNEL_COUNT", 5);
     public static final int CENTRAL_REQUEST_TTL = 5;
-    public static final int FIELD_TICK_INTERVAL = 100; // 100 ms tick
+    public static final int FIELD_TICK_INTERVAL = 50; // 50 ms tick
     public static final int SHUTDOWN_TIMEOUT = 30;
 
     public static final boolean AUTO_CREATE_ACCOUNT = Util.getEnv("AUTO_CREATE_ACCOUNT", true);
@@ -26,7 +26,7 @@ public final class ServerConfig {
     public static final int WORLD_SPEAKER_COOLTIME = 60;
 
     public static final String COMMAND_PREFIX = Util.getEnv("COMMAND_PREFIX", "!");
-    public static final boolean DEBUG_MODE = Util.getEnv("DEBUG_MODE", true);
+    public static final boolean DEBUG_MODE = Util.getEnv("DEBUG_MODE", false);
     public static final boolean PLAIN_TRAFFIC = Util.getEnv("PLAIN_TRAFFIC", false);
 
     // Rate multipliers (default 1.0 = no change, use integer multiplier for ease)
