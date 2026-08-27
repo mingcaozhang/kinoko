@@ -16,6 +16,7 @@ import kinoko.provider.skill.ElementAttribute;
 import kinoko.provider.skill.SkillInfo;
 import kinoko.provider.skill.SkillStat;
 import kinoko.script.party.HenesysPQ;
+import kinoko.server.ServerConfig;
 import kinoko.server.node.ServerExecutor;
 import kinoko.server.packet.OutPacket;
 import kinoko.util.BitFlag;
@@ -79,8 +80,12 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         this.nextSendMobHp = Instant.MIN;
         this.nextSkillUse = Instant.MIN;
         this.nextRecovery = Instant.now().plus(GameConstants.MOB_RECOVER_TIME, ChronoUnit.SECONDS);
-        this.removeAfter = template.getRemoveAfter() > 0 ? Instant.now().plus(template.getRemoveAfter(), ChronoUnit.SECONDS) : Instant.MAX;
-        this.nextDropItem = template.getDropItemPeriod() > 0 ? Instant.now().plus(template.getDropItemPeriod(), ChronoUnit.SECONDS) : Instant.MAX;
+        this.removeAfter = template.getRemoveAfter() > 0
+                ? Instant.now().plus(template.getRemoveAfter(), ChronoUnit.SECONDS)
+                : Instant.MAX;
+        this.nextDropItem = template.getDropItemPeriod() > 0
+                ? Instant.now().plus(template.getDropItemPeriod(), ChronoUnit.SECONDS)
+                : Instant.MAX;
     }
 
     public MobTemplate getTemplate() {
@@ -238,8 +243,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         }
     }
 
-
-    // HELPER METHODS --------------------------------------------------------------------------------------------------
+    // HELPER METHODS
+    // --------------------------------------------------------------------------------------------------
 
     public void updateHp(int hp) {
         if (hp < 0 || hp > getMaxHp() || hp == getHp()) {
@@ -249,7 +254,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         if (template.getHpTagColor() != 0 && template.getHpTagBgColor() != 0) {
             final Instant now = Instant.now();
             if (now.isAfter(nextSendMobHp)) {
-                getField().broadcastPacket(FieldEffectPacket.mobHpTag(getTemplateId(), getHp(), getMaxHp(), template.getHpTagColor(), template.getHpTagBgColor()));
+                getField().broadcastPacket(FieldEffectPacket.mobHpTag(getTemplateId(), getHp(), getMaxHp(),
+                        template.getHpTagColor(), template.getHpTagBgColor()));
                 nextSendMobHp = now.plus(GameConstants.MOB_HP_TAG_INTERVAL, ChronoUnit.MILLIS);
             }
         }
@@ -308,7 +314,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         nextDropItem = now.plus(template.getDropItemPeriod(), ChronoUnit.SECONDS);
         switch (template.getId()) {
             case HenesysPQ.MOON_BUNNY -> {
-                getField().broadcastPacket(BroadcastPacket.noticeWithoutPrefix(String.format("The Moon Bunny made rice cake number %d", itemDropCount)));
+                getField().broadcastPacket(BroadcastPacket
+                        .noticeWithoutPrefix(String.format("The Moon Bunny made rice cake number %d", itemDropCount)));
             }
         }
     }
@@ -387,7 +394,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
                 spawnRevives(delay);
             }
             if (template.getHpTagColor() != 0 && template.getHpTagBgColor() != 0) {
-                getField().broadcastPacket(FieldEffectPacket.mobHpTag(getId(), 0, getMaxHp(), template.getHpTagColor(), template.getHpTagBgColor()));
+                getField().broadcastPacket(FieldEffectPacket.mobHpTag(getId(), 0, getMaxHp(), template.getHpTagColor(),
+                        template.getHpTagBgColor()));
             }
             if (spawnPoint != null) {
                 spawnPoint.setNextMobRespawn();
@@ -407,16 +415,18 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         final Reward reward = stealResult.get();
         final Optional<Drop> dropResult = createDrop(attacker, reward);
         if (dropResult.isPresent()) {
-            getField().getDropPool().addDrop(dropResult.get(), DropEnterType.CREATE, getX(), getY() - GameConstants.DROP_HEIGHT, 0);
+            getField().getDropPool().addDrop(dropResult.get(), DropEnterType.CREATE, getX(),
+                    getY() - GameConstants.DROP_HEIGHT, 0);
             stolenReward = reward;
         }
     }
 
-
-    // PRIVATE METHODS -------------------------------------------------------------------------------------------------
+    // PRIVATE METHODS
+    // -------------------------------------------------------------------------------------------------
 
     /**
      * Distribute exp by damage dealt, share exp with party if:
+     * 
      * <pre>
      * 1) dealt damage,
      * 2) within 5 levels of mob, or
@@ -474,8 +484,7 @@ public final class Mob extends Life implements ControlledObject, Encodable {
                 for (User member : members) {
                     finalExpSplit.put(member, finalExpSplit.getOrDefault(member, 0) +
                             (int) (user == member ? 0.6 * exp : 0.0) +
-                            (int) (0.4 * exp * member.getLevel() / totalPartyLevel)
-                    );
+                            (int) (0.4 * exp * member.getLevel() / totalPartyLevel));
                 }
             } else {
                 finalExpSplit.put(user, finalExpSplit.getOrDefault(user, 0) + exp);
@@ -497,23 +506,31 @@ public final class Mob extends Life implements ControlledObject, Encodable {
             int finalExp = exp;
             int finalPartyBonus = partyBonus;
             if (user.getSecondaryStat().hasOption(CharacterTemporaryStat.HolySymbol)) {
-                final int bonus = GameConstants.getHolySymbolBonus(user.getSecondaryStat().getOption(CharacterTemporaryStat.HolySymbol).nOption, memberCount);
+                final int bonus = GameConstants.getHolySymbolBonus(
+                        user.getSecondaryStat().getOption(CharacterTemporaryStat.HolySymbol).nOption, memberCount);
                 final double multiplier = (bonus + 100) / 100.0;
                 finalExp = (int) (finalExp * multiplier);
                 finalPartyBonus = (int) (finalPartyBonus * multiplier);
             }
             if (user.getSecondaryStat().hasOption(CharacterTemporaryStat.ExpBuffRate)) {
-                final double multiplier = user.getSecondaryStat().getOption(CharacterTemporaryStat.ExpBuffRate).nOption / 100.0;
+                final double multiplier = user.getSecondaryStat().getOption(CharacterTemporaryStat.ExpBuffRate).nOption
+                        / 100.0;
                 finalExp = (int) (finalExp * multiplier);
                 finalPartyBonus = (int) (finalPartyBonus * multiplier);
             }
             if (user.getSecondaryStat().hasOption(CharacterTemporaryStat.Dice)) {
-                final int expR = user.getSecondaryStat().getOption(CharacterTemporaryStat.Dice).getDiceInfo().getInfoArray()[17];
+                final int expR = user.getSecondaryStat().getOption(CharacterTemporaryStat.Dice).getDiceInfo()
+                        .getInfoArray()[17];
                 if (expR > 0) {
                     final double multiplier = (expR + 100) / 100.0;
                     finalExp = (int) (finalExp * multiplier);
                     finalPartyBonus = (int) (finalPartyBonus * multiplier);
                 }
+            }
+            // Global EXP rate multiplier
+            if (ServerConfig.EXP_RATE > 1) {
+                finalExp = (int) (finalExp * ServerConfig.EXP_RATE);
+                finalPartyBonus = (int) (finalPartyBonus * ServerConfig.EXP_RATE);
             }
             if (finalExp + finalPartyBonus > 0) {
                 user.addExp(finalExp + finalPartyBonus);
@@ -525,7 +542,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
                 if (questInfoResult.isEmpty()) {
                     continue;
                 }
-                final Optional<QuestRecord> questProgressResult = questInfoResult.get().progressQuest(qr, getTemplateId());
+                final Optional<QuestRecord> questProgressResult = questInfoResult.get().progressQuest(qr,
+                        getTemplateId());
                 if (questProgressResult.isEmpty()) {
                     continue;
                 }
@@ -536,7 +554,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
     }
 
     private void dropRewards(User lastAttacker, int delay) {
-        // Sort damageDone by highest damage, assign owner to the highest damage attacker present in the field
+        // Sort damageDone by highest damage, assign owner to the highest damage
+        // attacker present in the field
         User owner = lastAttacker;
         final var iter = damageDone.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
@@ -559,7 +578,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         }
         // Add drops to field if any
         if (!drops.isEmpty()) {
-            getField().getDropPool().addDrops(drops, DropEnterType.CREATE, getX(), getY() - GameConstants.DROP_HEIGHT, delay, 0);
+            getField().getDropPool().addDrops(drops, DropEnterType.CREATE, getX(), getY() - GameConstants.DROP_HEIGHT,
+                    delay, 0);
         }
     }
 
@@ -568,13 +588,15 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         if (reward.isFieldRequirement() && reward.getFieldId() != getField().getFieldId()) {
             return Optional.empty();
         }
-        // Drop probability
-        double probability = reward.getProb();
+        // Drop probability (with global drop rate multiplier)
+        double probability = reward.getProb() * ServerConfig.DROP_RATE;
         if (owner.getSecondaryStat().hasOption(CharacterTemporaryStat.ItemUpByItem)) {
-            final double multiplier = (owner.getSecondaryStat().getOption(CharacterTemporaryStat.ItemUpByItem).nOption + 100) / 100.0;
+            final double multiplier = (owner.getSecondaryStat().getOption(CharacterTemporaryStat.ItemUpByItem).nOption
+                    + 100) / 100.0;
             probability = probability * multiplier;
         }
-        if (getMobStat().hasOption(MobTemporaryStat.Showdown) && getMobStat().getOption(MobTemporaryStat.Showdown).rOption != WildHunter.STINK_BOMB_SHOT) {
+        if (getMobStat().hasOption(MobTemporaryStat.Showdown)
+                && getMobStat().getOption(MobTemporaryStat.Showdown).rOption != WildHunter.STINK_BOMB_SHOT) {
             final double multiplier = (getMobStat().getOption(MobTemporaryStat.Showdown).nOption + 100) / 100.0;
             probability = probability * multiplier;
         }
@@ -587,33 +609,37 @@ public final class Mob extends Life implements ControlledObject, Encodable {
             if (money <= 0) {
                 return Optional.empty();
             }
+            // Global meso rate multiplier
+            if (ServerConfig.MESO_RATE > 1) {
+                money = (int) (money * ServerConfig.MESO_RATE);
+            }
             if (owner.getSkillLevel(Thief.MESO_MASTERY) > 0) {
                 final double multiplier = (owner.getSkillStatValue(Thief.MESO_MASTERY, SkillStat.mesoR) + 100) / 100.0;
                 money = (int) (money * multiplier);
             }
             if (owner.getSecondaryStat().hasOption(CharacterTemporaryStat.MesoUp)) {
-                final double multiplier = owner.getSecondaryStat().getOption(CharacterTemporaryStat.MesoUp).nOption / 100.0;
+                final double multiplier = owner.getSecondaryStat().getOption(CharacterTemporaryStat.MesoUp).nOption
+                        / 100.0;
                 money = (int) (money * multiplier);
             }
             if (owner.getSecondaryStat().hasOption(CharacterTemporaryStat.MesoUpByItem)) {
-                final double multiplier = (owner.getSecondaryStat().getOption(CharacterTemporaryStat.MesoUpByItem).nOption + 100) / 100.0;
+                final double multiplier = (owner.getSecondaryStat()
+                        .getOption(CharacterTemporaryStat.MesoUpByItem).nOption + 100) / 100.0;
                 money = (int) (money * multiplier);
             }
-            return Optional.of(owner.hasParty() ?
-                    Drop.money(DropOwnType.PARTYOWN, this, money, owner.getPartyId()) :
-                    Drop.money(DropOwnType.USEROWN, this, money, owner.getCharacterId())
-            );
+            return Optional.of(owner.hasParty() ? Drop.money(DropOwnType.PARTYOWN, this, money, owner.getPartyId())
+                    : Drop.money(DropOwnType.USEROWN, this, money, owner.getCharacterId()));
         } else {
             final Optional<ItemInfo> itemInfoResult = ItemProvider.getItemInfo(reward.getItemId());
             if (itemInfoResult.isEmpty()) {
                 return Optional.empty();
             }
             final int quantity = Util.getRandom(reward.getMin(), reward.getMax());
-            final Item item = itemInfoResult.get().createItem(owner.getNextItemSn(), quantity, ItemVariationOption.NORMAL);
-            return Optional.of(owner.hasParty() ?
-                    Drop.item(DropOwnType.PARTYOWN, this, item, owner.getPartyId(), reward.getQuestId()) :
-                    Drop.item(DropOwnType.USEROWN, this, item, owner.getCharacterId(), reward.getQuestId())
-            );
+            final Item item = itemInfoResult.get().createItem(owner.getNextItemSn(), quantity,
+                    ItemVariationOption.NORMAL);
+            return Optional.of(owner.hasParty()
+                    ? Drop.item(DropOwnType.PARTYOWN, this, item, owner.getPartyId(), reward.getQuestId())
+                    : Drop.item(DropOwnType.USEROWN, this, item, owner.getCharacterId(), reward.getQuestId()));
         }
     }
 
@@ -633,8 +659,7 @@ public final class Mob extends Life implements ControlledObject, Encodable {
                         null,
                         getX(),
                         getY(),
-                        getFoothold()
-                );
+                        getFoothold());
                 reviveMob.setLeft(isLeft());
                 reviveMob.setSummonType(MobAppearType.REVIVED.getValue());
                 getField().getMobPool().addMob(reviveMob);
@@ -642,8 +667,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
         }, template.getReviveDelay() + delay, TimeUnit.MILLISECONDS);
     }
 
-
-    // OVERRIDES -------------------------------------------------------------------------------------------------------
+    // OVERRIDES
+    // -------------------------------------------------------------------------------------------------------
 
     @Override
     public boolean isLeft() {
@@ -670,7 +695,8 @@ public final class Mob extends Life implements ControlledObject, Encodable {
 
     @Override
     public String toString() {
-        return String.format("Mob { %d, oid : %d, hp : %d, mp : %d, controller : %s }", getTemplateId(), getId(), getHp(), getMp(), getController() != null ? getController().getCharacterName() : "null");
+        return String.format("Mob { %d, oid : %d, hp : %d, mp : %d, controller : %s }", getTemplateId(), getId(),
+                getHp(), getMp(), getController() != null ? getController().getCharacterName() : "null");
     }
 
     @Override

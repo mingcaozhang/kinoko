@@ -28,4 +28,10 @@ public final class ServerConfig {
     public static final String COMMAND_PREFIX = Util.getEnv("COMMAND_PREFIX", "!");
     public static final boolean DEBUG_MODE = Util.getEnv("DEBUG_MODE", true);
     public static final boolean PLAIN_TRAFFIC = Util.getEnv("PLAIN_TRAFFIC", false);
+
+    // Rate multipliers (default 1.0 = no change, use integer multiplier for ease)
+    public static final int EXP_RATE = Util.getEnv("EXP_RATE", 1);
+    public static final int MESO_RATE = Util.getEnv("MESO_RATE", 1);
+    public static final int DROP_RATE = Util.getEnv("DROP_RATE", 1);
 }
+
