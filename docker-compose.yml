@@ -3,7 +3,7 @@ services:
     build: .
     ports:
       - 8484:8484
-      - 8585-8989:8585-8989
+      - 8585-8588:8585-8588
     volumes:
       - ./data:/kinoko/data
       - ./wz:/kinoko/wz
@@ -11,12 +11,12 @@ services:
       # ServerConstants
       CENTRAL_HOST: "127.0.0.1"
       CENTRAL_PORT: "8282"
-      SERVER_HOST: "127.0.0.1"
+      SERVER_HOST: "192.168.245.70"
       DATABASE_PROVIDER: "sqlite"
       # ServerConfig
       WORLD_ID: "0"
       WORLD_NAME: "Kinoko"
-      CHANNEL_COUNT: "5"
+      CHANNEL_COUNT: "4"
       AUTO_CREATE_ACCOUNT: "true"
       REQUIRE_SECONDARY_PASSWORD: "true"
       WZ_DIRECTORY: "/kinoko/wz"
